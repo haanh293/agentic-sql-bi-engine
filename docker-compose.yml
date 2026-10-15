@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  agentic-sql-bi-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentic-sql-bi-engine
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DB_PATH=/app/data/ecommerce.db
+      - SEED_ON_STARTUP=true
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - MAX_SELF_HEAL_ATTEMPTS=3
+      - DEFAULT_QUERY_LIMIT=100
+      - MAX_QUERY_LIMIT=500
+    volumes:
+      - sql_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/analytics/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sql_data:
+    driver: local
